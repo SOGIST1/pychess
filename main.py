@@ -1,25 +1,183 @@
-import pygame as pyg
-# Initialize Pygame
-pyg.init()
+import pygame
+import math
+# Initializing Pygame
+pygame.init()
 
 # Screen
-pyg.RESIZABLE
-WIDTH = 700
 ROWS = 8
-screen = pyg.display.set_mode([WIDTH, WIDTH])
-pyg.display.set_caption("PyChess")
+WIDTH = 70*ROWS
+screen = pygame.display.set_mode((WIDTH, WIDTH))
+pygame.display.set_caption("PyChess")
 
 # Colors
-WHITE = (255,255,255)
-BLACK = (0,0,0)
-BROWN = (139,69,19)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GRAY = (200, 200, 200)
+BROWN = (160, 82, 45)
+TAN = (222, 184, 135)
 
 # Images
-P_IMAGE = pyg.transform.scale(pyg.image.load("images/pawn.png"), (100,100))
-N_IMAGE = pyg.transform.scale(pyg.image.load("images/knight.png"), (100,100))
-B_IMAGE = pyg.transform.scale(pyg.image.load("images/bishop.png"), (100,100))
-R_IMAGE = pyg.transform.scale(pyg.image.load("images/rook.png"), (100,100))
-Q_IMAGE = pyg.transform.scale(pyg.image.load("images/queen.png"), (100,100))
-K_IMAGE = pyg.transform.scale(pyg.image.load("images/king.png"), (100,100))
+# TODO scale correctly
+P_IMAGE = pygame.transform.scale(pygame.image.load("images/pawn.png"), (80, 80))
+N_IMAGE = pygame.transform.scale(pygame.image.load("images/knight.png"), (80, 80))
+B_IMAGE = pygame.transform.scale(pygame.image.load("images/bishop.png"), (80, 80))
+R_IMAGE = pygame.transform.scale(pygame.image.load("images/rook.png"), (80, 80))
+Q_IMAGE = pygame.transform.scale(pygame.image.load("images/queen.png"), (80, 80))
+K_IMAGE = pygame.transform.scale(pygame.image.load("images/king.png"), (80, 80))
 
-#Fonts
+X_IMAGE = pygame.transform.scale(pygame.image.load("images/pawn.png"), (80, 80))
+O_IMAGE = pygame.transform.scale(pygame.image.load("images/rook.png"), (80, 80))
+
+# Fonts
+END_FONT = pygame.font.SysFont('courier', 40)
+
+
+def draw_grid():
+    gap = WIDTH // ROWS
+
+    # Starting points
+    x = 0
+    y = 0
+
+    for i in range(ROWS):
+        for j in range(ROWS//2):
+            pygame.draw.rect(screen, TAN, (x, y, WIDTH / ROWS, WIDTH / ROWS), 0)
+            x += (WIDTH / ROWS)
+            pygame.draw.rect(screen, BROWN, (x, y, WIDTH / ROWS, WIDTH / ROWS), 0)
+            x += (WIDTH / ROWS)
+        y += (WIDTH / ROWS)
+
+
+
+def initialize_grid():
+    dis_to_cen = WIDTH // ROWS // 2
+
+    # Initializing the array
+    game_array = [[None, None, None], [None, None, None], [None, None, None]]
+
+    for i in range(len(game_array)):
+        for j in range(len(game_array[i])):
+            x = dis_to_cen * (2 * j + 1)
+            y = dis_to_cen * (2 * i + 1)
+
+            # Adding centre coordinates
+            game_array[i][j] = (x, y, "", True)
+
+    return game_array
+
+
+def click(game_array):
+    global x_turn, o_turn, images
+
+    # Mouse position
+    m_x, m_y = pygame.mouse.get_pos()
+
+    for i in range(len(game_array)):
+        for j in range(len(game_array[i])):
+            x, y, char, can_play = game_array[i][j]
+
+            # Distance between mouse and the centre of the square
+            dis = math.sqrt((x - m_x) ** 2 + (y - m_y) ** 2)
+
+            # If it's inside the square
+            if dis < WIDTH // ROWS // 2 and can_play:
+                if x_turn:  # If it's X's turn
+                    images.append((x, y, X_IMAGE))
+                    x_turn = False
+                    o_turn = True
+                    game_array[i][j] = (x, y, 'x', False)
+
+                elif o_turn:  # If it's O's turn
+                    images.append((x, y, O_IMAGE))
+                    x_turn = True
+                    o_turn = False
+                    game_array[i][j] = (x, y, 'o', False)
+
+
+# Checking if someone has won
+def has_won(game_array):
+    # Checking rows
+    for row in range(len(game_array)):
+        if (game_array[0][2] == game_array[1][2] == game_array[2][2]) and game_array[0][2] != "":
+            display_message(game_array[0][2].upper() + " has won!")
+            return True
+
+    # Checking columns
+    for col in range(len(game_array)):
+        if (game_array[0][2] == game_array[1][2] == game_array[2][2]) and game_array[0][2] != "":
+            display_message(game_array[0][2].upper() + " has won!")
+            return True
+
+    # Checking main diagonal
+    if (game_array[0][0][2] == game_array[1][1][2] == game_array[2][2][2]) and game_array[0][0][2] != "":
+        display_message(game_array[0][0][2].upper() + " has won!")
+        return True
+
+    # Checking reverse diagonal
+    if (game_array[0][2][2] == game_array[1][1][2] == game_array[2][0][2]) and game_array[0][2][2] != "":
+        display_message(game_array[0][2][2].upper() + " has won!")
+        return True
+
+    return False
+
+
+def has_drawn(game_array):
+    for i in range(len(game_array)):
+        for j in range(len(game_array[i])):
+            if game_array[i][j][2] == "":
+                return False
+
+    display_message("It's a draw!")
+    return True
+
+
+def display_message(content):
+    pygame.time.delay(500)
+    screen.fill(WHITE)
+    end_text = END_FONT.render(content, 1, BLACK)
+    screen.blit(end_text, ((WIDTH - end_text.get_width()) // 2, (WIDTH - end_text.get_height()) // 2))
+    pygame.display.update()
+    pygame.time.delay(3000)
+
+
+def render():
+    screen.fill(WHITE)
+    draw_grid()
+
+    # Drascreeng X's and O's
+    for image in images:
+        x, y, IMAGE = image
+        screen.blit(IMAGE, (x - IMAGE.get_width() // 2, y - IMAGE.get_height() // 2))
+
+    pygame.display.update()
+
+
+def main():
+    global x_turn, o_turn, images, draw
+
+    images = []
+    draw = False
+
+    run = True
+
+    x_turn = True
+    o_turn = False
+
+    game_array = initialize_grid()
+
+    while run:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                click(game_array)
+
+        render()
+
+        if has_won(game_array) or has_drawn(game_array):
+            run = False
+
+
+while True:
+    if __name__ == '__main__':
+        main()
