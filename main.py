@@ -18,15 +18,17 @@ TAN = (222, 184, 135)
 
 # Images
 # TODO scale correctly
-P_IMAGE = pygame.transform.scale(pygame.image.load("images/pawn.png"), (80, 80))
-N_IMAGE = pygame.transform.scale(pygame.image.load("images/knight.png"), (80, 80))
-B_IMAGE = pygame.transform.scale(pygame.image.load("images/bishop.png"), (80, 80))
-R_IMAGE = pygame.transform.scale(pygame.image.load("images/rook.png"), (80, 80))
-Q_IMAGE = pygame.transform.scale(pygame.image.load("images/queen.png"), (80, 80))
-K_IMAGE = pygame.transform.scale(pygame.image.load("images/king.png"), (80, 80))
+SCALE = (60, 60)
 
-X_IMAGE = pygame.transform.scale(pygame.image.load("images/pawn.png"), (80, 80))
-O_IMAGE = pygame.transform.scale(pygame.image.load("images/rook.png"), (80, 80))
+P_IMAGE = pygame.transform.scale(pygame.image.load("images/pawn.png"), SCALE)
+N_IMAGE = pygame.transform.scale(pygame.image.load("images/knight.png"), SCALE)
+B_IMAGE = pygame.transform.scale(pygame.image.load("images/bishop.png"), SCALE)
+R_IMAGE = pygame.transform.scale(pygame.image.load("images/rook.png"), SCALE)
+Q_IMAGE = pygame.transform.scale(pygame.image.load("images/queen.png"), SCALE)
+K_IMAGE = pygame.transform.scale(pygame.image.load("images/king.png"), SCALE)
+
+X_IMAGE = pygame.transform.scale(pygame.image.load("images/pawn.png"), SCALE)
+O_IMAGE = pygame.transform.scale(pygame.image.load("images/rook.png"), SCALE)
 
 # Fonts
 END_FONT = pygame.font.SysFont('courier', 40)
@@ -40,58 +42,33 @@ def draw_grid():
     y = 0
 
     for i in range(ROWS):
-        for j in range(ROWS//2):
-            pygame.draw.rect(screen, TAN, (x, y, WIDTH / ROWS, WIDTH / ROWS), 0)
-            x += (WIDTH / ROWS)
-            pygame.draw.rect(screen, BROWN, (x, y, WIDTH / ROWS, WIDTH / ROWS), 0)
-            x += (WIDTH / ROWS)
-        y += (WIDTH / ROWS)
-
+        if i % 2 == 1:
+            pygame.draw.rect(screen, BROWN, (x, y, gap, gap))
+            x += gap
+        for j in range(ROWS // 2):
+            pygame.draw.rect(screen, TAN, (x, y, gap, gap))
+            x += gap
+            pygame.draw.rect(screen, BROWN, (x, y, gap, gap))
+            x += gap
+        y += gap
+        x = 0
 
 
 def initialize_grid():
     dis_to_cen = WIDTH // ROWS // 2
 
     # Initializing the array
-    game_array = [[None, None, None], [None, None, None], [None, None, None]]
-
-    for i in range(len(game_array)):
-        for j in range(len(game_array[i])):
-            x = dis_to_cen * (2 * j + 1)
-            y = dis_to_cen * (2 * i + 1)
-
-            # Adding centre coordinates
-            game_array[i][j] = (x, y, "", True)
-
-    return game_array
-
-
-def click(game_array):
-    global x_turn, o_turn, images
+    game_array = [[None, None, None, None, None, None, None, None],
+                  [None, None, None, None, None, None, None, None],
+                  [None, None, None, None, None, None, None, None],
+                  [None, None, None, None, None, None, None, None],
+                  [None, None, None, None, None, None, None, None],
+                  [None, None, None, None, None, None, None, None],
+                  [None, None, None, None, None, None, None, None],
+                  [None, None, None, None, None, None, None, None]]
 
     # Mouse position
-    m_x, m_y = pygame.mouse.get_pos()
 
-    for i in range(len(game_array)):
-        for j in range(len(game_array[i])):
-            x, y, char, can_play = game_array[i][j]
-
-            # Distance between mouse and the centre of the square
-            dis = math.sqrt((x - m_x) ** 2 + (y - m_y) ** 2)
-
-            # If it's inside the square
-            if dis < WIDTH // ROWS // 2 and can_play:
-                if x_turn:  # If it's X's turn
-                    images.append((x, y, X_IMAGE))
-                    x_turn = False
-                    o_turn = True
-                    game_array[i][j] = (x, y, 'x', False)
-
-                elif o_turn:  # If it's O's turn
-                    images.append((x, y, O_IMAGE))
-                    x_turn = True
-                    o_turn = False
-                    game_array[i][j] = (x, y, 'o', False)
 
 
 # Checking if someone has won
@@ -121,19 +98,8 @@ def has_won(game_array):
     return False
 
 
-def has_drawn(game_array):
-    for i in range(len(game_array)):
-        for j in range(len(game_array[i])):
-            if game_array[i][j][2] == "":
-                return False
-
-    display_message("It's a draw!")
-    return True
-
-
 def display_message(content):
     pygame.time.delay(500)
-    screen.fill(WHITE)
     end_text = END_FONT.render(content, 1, BLACK)
     screen.blit(end_text, ((WIDTH - end_text.get_width()) // 2, (WIDTH - end_text.get_height()) // 2))
     pygame.display.update()
@@ -143,13 +109,6 @@ def display_message(content):
 def render():
     screen.fill(WHITE)
     draw_grid()
-
-    # Drascreeng X's and O's
-    for image in images:
-        x, y, IMAGE = image
-        screen.blit(IMAGE, (x - IMAGE.get_width() // 2, y - IMAGE.get_height() // 2))
-
-    pygame.display.update()
 
 
 def main():
@@ -174,8 +133,7 @@ def main():
 
         render()
 
-        if has_won(game_array) or has_drawn(game_array):
-            run = False
+        # TODO win condition sets run to false
 
 
 while True:
